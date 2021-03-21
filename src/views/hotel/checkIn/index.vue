@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="订单号" prop="menuName">
+      <el-form-item label="订单号" prop="ordersId">
         <el-input
-          v-model="queryParams.menuName"
+          v-model="queryParams.ordersId"
           placeholder="请输入订单号"
           clearable
           size="small"
@@ -61,38 +61,38 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['hotel:checkIn:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['hotel:checkIn:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['hotel:checkIn:remove']"
-        >删除</el-button>
-      </el-col>
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="primary"-->
+<!--          plain-->
+<!--          icon="el-icon-plus"-->
+<!--          size="mini"-->
+<!--          @click="handleAdd"-->
+<!--          v-hasPermi="['hotel:checkIn:add']"-->
+<!--        >新增</el-button>-->
+<!--      </el-col>-->
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="success"-->
+<!--          plain-->
+<!--          icon="el-icon-edit"-->
+<!--          size="mini"-->
+<!--          :disabled="single"-->
+<!--          @click="handleUpdate"-->
+<!--          v-hasPermi="['hotel:checkIn:edit']"-->
+<!--        >修改</el-button>-->
+<!--      </el-col>-->
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="danger"-->
+<!--          plain-->
+<!--          icon="el-icon-delete"-->
+<!--          size="mini"-->
+<!--          :disabled="multiple"-->
+<!--          @click="handleDelete"-->
+<!--          v-hasPermi="['hotel:checkIn:remove']"-->
+<!--        >删除</el-button>-->
+<!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -109,7 +109,7 @@
     <el-table v-loading="loading" :data="checkInList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="主键" align="center" prop="checkInId" />
-      <el-table-column label="订单号" align="center" prop="menuName" />
+      <el-table-column label="订单号" align="center" prop="ordersId" />
       <el-table-column label="房间号" align="center" prop="roomNumber" />
       <el-table-column label="酒店名" align="center" prop="hotelName" />
       <el-table-column label="入住人数" align="center" prop="perCount" />
@@ -120,28 +120,28 @@
           <span>{{ parseTime(scope.row.checkInTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status" />
+      <el-table-column label="状态" align="center" prop="status" :formatter="orderStateFormat" />
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button
+          <el-button v-if="scope.row.status == 1"
             size="mini"
             type="text"
             icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['hotel:checkIn:edit']"
-          >修改</el-button>
-          <el-button
+            @click="checkIn(scope.row)"
+            v-hasPermi="['hotel:checkIn:checkIn']"
+          >入住</el-button>
+          <el-button v-if="scope.row.status == 1"
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['hotel:checkIn:remove']"
-          >删除</el-button>
+          >取消</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -153,14 +153,14 @@
     <!-- 添加或修改入住退房登记管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="订单号" prop="menuName">
-          <el-input v-model="form.menuName" placeholder="请输入订单号" />
+        <el-form-item label="订单号" prop="ordersId">
+          <el-input v-model="form.ordersId" :disabled="true" placeholder="请输入订单号" />
         </el-form-item>
         <el-form-item label="房间号" prop="roomNumber">
-          <el-input v-model="form.roomNumber" placeholder="请输入房间号" />
+          <el-input v-model="form.roomNumber" :disabled="true" placeholder="请输入房间号" />
         </el-form-item>
         <el-form-item label="酒店名" prop="hotelName">
-          <el-input v-model="form.hotelName" placeholder="请输入酒店名" />
+          <el-input v-model="form.hotelName" :disabled="true" placeholder="请输入酒店名" />
         </el-form-item>
         <el-form-item label="入住人数" prop="perCount">
           <el-input v-model="form.perCount" placeholder="请输入入住人数" />
@@ -179,14 +179,11 @@
             placeholder="选择入住时间">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-radio-group v-model="form.status">
-            <el-radio label="1">请选择字典生成</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
+<!--        <el-form-item label="状态">-->
+<!--          <el-radio-group v-model="form.status">-->
+<!--            <el-radio label="1">请选择字典生成</el-radio>-->
+<!--          </el-radio-group>-->
+<!--        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -197,7 +194,7 @@
 </template>
 
 <script>
-import { listCheckIn, getCheckIn, delCheckIn, addCheckIn, updateCheckIn, exportCheckIn } from "@/api/hotel/checkIn";
+import { listCheckIn, getCheckIn, delCheckIn, addCheckIn, updateCheckIn, exportCheckIn, checkIn } from "@/api/hotel/checkIn";
 
 export default {
   name: "CheckIn",
@@ -227,7 +224,7 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        menuName: null,
+        ordersId: null,
         roomNumber: null,
         hotelName: null,
         perCount: null,
@@ -243,6 +240,9 @@ export default {
   },
   created() {
     this.getList();
+    this.getDicts("hotel_order_status").then(response => {
+      this.orderStateOptions = response.data;
+    });
   },
   methods: {
     /** 查询入住退房登记管理列表 */
@@ -254,6 +254,10 @@ export default {
         this.loading = false;
       });
     },
+    // 预订状态字典翻译
+    orderStateFormat(row, column) {
+      return this.selectDictLabel(this.orderStateOptions, row.status);
+    },
     // 取消按钮
     cancel() {
       this.open = false;
@@ -263,7 +267,7 @@ export default {
     reset() {
       this.form = {
         checkInId: null,
-        menuName: null,
+        ordersId: null,
         roomNumber: null,
         hotelId: null,
         roomTypeId: null,
@@ -314,12 +318,22 @@ export default {
         this.title = "修改入住退房登记管理";
       });
     },
+    //入住按钮操作
+    checkIn(row) {
+      this.reset();
+      const checkInId = row.checkInId || this.ids
+      getCheckIn(checkInId).then(response => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改入住退房登记管理";
+      });
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.checkInId != null) {
-            updateCheckIn(this.form).then(response => {
+            checkIn(this.form).then(response => {
               this.msgSuccess("修改成功");
               this.open = false;
               this.getList();
