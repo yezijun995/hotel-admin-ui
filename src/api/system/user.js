@@ -125,3 +125,11 @@ export function importTemplate() {
     method: 'get'
   })
 }
+
+// 查询用户数
+export function getUserCount() {
+  return request({
+    url: '/system/user/count',
+    method: 'get'
+  })
+}

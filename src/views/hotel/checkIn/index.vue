@@ -138,6 +138,14 @@
             @click="handleDelete(scope.row)"
             v-hasPermi="['hotel:checkIn:remove']"
           >取消</el-button>
+
+          <el-button v-if="scope.row.status == 2"
+                     size="mini"
+                     type="text"
+                     icon="el-icon-bell"
+                     @click="checkOut(scope.row)"
+                     v-hasPermi="['hotel:checkIn:checkOut']"
+          >退房</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -194,7 +202,7 @@
 </template>
 
 <script>
-import { listCheckIn, getCheckIn, delCheckIn, addCheckIn, updateCheckIn, exportCheckIn, checkIn } from "@/api/hotel/checkIn";
+import { listCheckIn, getCheckIn,checkOut, delCheckIn, addCheckIn, updateCheckIn, exportCheckIn, checkIn,cancel } from "@/api/hotel/checkIn";
 
 export default {
   name: "CheckIn",
@@ -348,19 +356,47 @@ export default {
         }
       });
     },
-    /** 删除按钮操作 */
+    // /** 删除按钮操作 */
+    // handleDelete(row) {
+    //   const checkInIds = row.checkInId || this.ids;
+    //   this.$confirm('是否确认删除入住退房登记管理编号为"' + checkInIds + '"的数据项?', "警告", {
+    //       confirmButtonText: "确定",
+    //       cancelButtonText: "取消",
+    //       type: "warning"
+    //     }).then(function() {
+    //       return delCheckIn(checkInIds);
+    //     }).then(() => {
+    //       this.getList();
+    //       this.msgSuccess("删除成功");
+    //     })
+    // },
+    /** 取消按钮操作 */
     handleDelete(row) {
       const checkInIds = row.checkInId || this.ids;
-      this.$confirm('是否确认删除入住退房登记管理编号为"' + checkInIds + '"的数据项?', "警告", {
+      this.$confirm('是否确认取消此入住退房登记?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return delCheckIn(checkInIds);
+          return cancel(checkInIds);
         }).then(() => {
           this.getList();
           this.msgSuccess("删除成功");
         })
+    },
+    /** 退房按钮操作 */
+    checkOut(row) {
+      const checkInIds = row.checkInId || this.ids;
+      this.$confirm('是否确认退宿此入住登记?', "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(function() {
+        return checkOut(checkInIds);
+      }).then(() => {
+        this.getList();
+        this.msgSuccess("退房成功");
+      })
     },
     /** 导出按钮操作 */
     handleExport() {

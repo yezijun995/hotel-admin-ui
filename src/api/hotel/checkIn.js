@@ -35,7 +35,7 @@ export function updateCheckIn(data) {
   })
 }
 
-// 入住退房登记管理
+// 入住登记管理
 export function checkIn(data) {
   return request({
     url: '/hotel/checkIn/in',
@@ -44,10 +44,26 @@ export function checkIn(data) {
   })
 }
 
+// 退房登记管理
+export function checkOut(checkInId) {
+  return request({
+    url: '/hotel/checkIn/checkOut/' + checkInId,
+    method: 'delete'
+  })
+}
+
 // 删除入住退房登记管理
 export function delCheckIn(checkInId) {
   return request({
     url: '/hotel/checkIn/' + checkInId,
+    method: 'delete'
+  })
+}
+
+// 取消入住退房登记管理
+export function cancel(checkInId) {
+  return request({
+    url: '/hotel/checkIn/cancel/' + checkInId,
     method: 'delete'
   })
 }

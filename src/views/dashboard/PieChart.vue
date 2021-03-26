@@ -7,6 +7,8 @@ import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
 
+import {getPieChartRoomType} from '@/api/hotel/roomType'
+
 export default {
   mixins: [resize],
   props: {
@@ -25,8 +27,12 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      pieChartData: []
     }
+  },
+  created() {
+    this.getPieChartRoomType()
   },
   mounted() {
     this.$nextTick(() => {
@@ -40,6 +46,11 @@ export default {
     this.chart.dispose()
     this.chart = null
   },
+  watch:{
+    pieChartData(val,oldVal){
+      this.initChart()
+    }
+  },
   methods: {
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
@@ -52,7 +63,10 @@ export default {
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['Industries', 'Technology', 'Forex', 'Gold', 'Forecasts']
+          // data: ['Industries', 'Technology', 'Forex', 'Gold', 'Forecasts']
+          data: this.pieChartData.map((item,index) =>{
+            return item.name
+          })
         },
         series: [
           {
@@ -61,18 +75,27 @@ export default {
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
-            data: [
-              { value: 320, name: 'Industries' },
-              { value: 240, name: 'Technology' },
-              { value: 149, name: 'Forex' },
-              { value: 100, name: 'Gold' },
-              { value: 59, name: 'Forecasts' }
-            ],
+            // data: [
+            //   { name: 'Industries',value: 320  },
+            //   { value: 240, name: 'Technology' },
+            //   { value: 149, name: 'Forex' },
+            //   { value: 100, name: 'Gold' },
+            //   { value: 59, name: 'Forecasts' }
+            // ],
+            data: this.pieChartData,
             animationEasing: 'cubicInOut',
             animationDuration: 2600
           }
         ]
       })
+    },
+    getPieChartRoomType(){
+      this.loading = true;
+      getPieChartRoomType().then(
+        response => {
+          this.pieChartData = response.data
+        }
+      );
     }
   }
 }

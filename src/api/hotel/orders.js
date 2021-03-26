@@ -51,3 +51,35 @@ export function exportOrders(query) {
     params: query
   })
 }
+
+// 查询用户数
+export function getEarnMoney() {
+  return request({
+    url: '/hotel/orders/money',
+    method: 'get'
+  })
+}
+
+// 查询订单数
+export function getOrderCount() {
+  return request({
+    url: '/hotel/orders/orderCount',
+    method: 'get'
+  })
+}
+
+// 查询订单图表
+export function getOrderRadderChart() {
+  return request({
+    url: '/hotel/orders/orderRadderChart',
+    method: 'get'
+  })
+}
+
+// 查询订单金额图表
+export function getOrderBarChartCost() {
+  return request({
+    url: '/hotel/orders/orderBarChartCost',
+    method: 'get'
+  })
+}

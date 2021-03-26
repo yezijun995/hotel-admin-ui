@@ -7,6 +7,8 @@ import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
 
+import {getOrderRadderChart} from "@/api/hotel/orders";
+
 const animationDuration = 3000
 
 export default {
@@ -27,7 +29,8 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      orderCount: []
     }
   },
   mounted() {
@@ -41,6 +44,14 @@ export default {
     }
     this.chart.dispose()
     this.chart = null
+  },
+  created() {
+    this.getOrderRadderChart()
+  },
+  watch:{
+    orderCount(val,oldVal){
+      this.initChart()
+    }
   },
   methods: {
     initChart() {
@@ -68,18 +79,17 @@ export default {
             }
           },
           indicator: [
-            { name: 'Sales', max: 10000 },
-            { name: 'Administration', max: 20000 },
-            { name: 'Information Techology', max: 20000 },
-            { name: 'Customer Support', max: 20000 },
-            { name: 'Development', max: 20000 },
-            { name: 'Marketing', max: 20000 }
+            { name: '已取消', max: eval(this.orderCount.join('+')) },
+            { name: '未付款', max: eval(this.orderCount.join('+')) },
+            { name: '已付款', max: eval(this.orderCount.join('+')) },
+            { name: '已入住', max: eval(this.orderCount.join('+')) },
+            { name: '已退宿', max: eval(this.orderCount.join('+'))},
           ]
         },
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['Allocated Budget', 'Expected Spending', 'Actual Spending']
+          data: ['订单状态']
         },
         series: [{
           type: 'radar',
@@ -95,22 +105,24 @@ export default {
           },
           data: [
             {
-              value: [5000, 7000, 12000, 11000, 15000, 14000],
-              name: 'Allocated Budget'
+              value: this.orderCount,
+              name: '订单状态'
             },
-            {
-              value: [4000, 9000, 15000, 15000, 13000, 11000],
-              name: 'Expected Spending'
-            },
-            {
-              value: [5500, 11000, 12000, 15000, 12000, 12000],
-              name: 'Actual Spending'
-            }
+
           ],
           animationDuration: animationDuration
         }]
       })
-    }
+    },
+    /** 查询订单图表数 */
+    getOrderRadderChart() {
+      this.loading = true;
+      getOrderRadderChart().then(
+        response => {
+          this.orderCount = response.data
+        }
+      );
+    },
   }
 }
 </script>

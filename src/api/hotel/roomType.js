@@ -59,3 +59,11 @@ export function exportRoomType(query) {
     params: query
   })
 }
+
+// 导出房间类型
+export function getPieChartRoomType(query) {
+  return request({
+    url: '/hotel/roomType/pieChart',
+    method: 'get'
+  })
+}
