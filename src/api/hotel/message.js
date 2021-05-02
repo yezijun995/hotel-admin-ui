@@ -51,3 +51,11 @@ export function exportMessage(query) {
     params: query
   })
 }
+
+// 查询订单数
+export function getMessageCount() {
+  return request({
+    url: '/hotel/message/messageCount',
+    method: 'get'
+  })
+}

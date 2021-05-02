@@ -1,223 +1,234 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="用户名" prop="username">
-        <el-input
-          v-model="queryParams.username"
-          placeholder="请输入用户名"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="手机" prop="phone">
-        <el-input
-          v-model="queryParams.phone"
-          placeholder="请输入手机"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="房间类型" prop="roomTypeName">
-        <el-input
-          v-model="queryParams.roomTypeName"
-          placeholder="请输入房间类型"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="房间数" prop="numOfRoom">
-        <el-input
-          v-model="queryParams.numOfRoom"
-          placeholder="请输入房间数"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="预订时间" prop="orderDate">
-        <el-date-picker clearable size="small"
-          v-model="queryParams.orderDate"
-          type="date"
-          value-format="yyyy-MM-dd"
-          placeholder="选择预订时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="预订状态" prop="orderState">
-        <el-input
-          v-model="queryParams.orderState"
-          placeholder="请输入预订状态"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
 
-    <el-row :gutter="10" class="mb8">
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="primary"-->
-<!--          plain-->
-<!--          icon="el-icon-plus"-->
-<!--          size="mini"-->
-<!--          @click="handleAdd"-->
-<!--          v-hasPermi="['hotel:orders:add']"-->
-<!--        >新增</el-button>-->
-<!--      </el-col>-->
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="success"-->
-<!--          plain-->
-<!--          icon="el-icon-edit"-->
-<!--          size="mini"-->
-<!--          :disabled="single"-->
-<!--          @click="handleUpdate"-->
-<!--          v-hasPermi="['hotel:orders:edit']"-->
-<!--        >修改</el-button>-->
-<!--      </el-col>-->
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="danger"-->
-<!--          plain-->
-<!--          icon="el-icon-delete"-->
-<!--          size="mini"-->
-<!--          :disabled="multiple"-->
-<!--          @click="handleDelete"-->
-<!--          v-hasPermi="['hotel:orders:remove']"-->
-<!--        >删除</el-button>-->
-<!--      </el-col>-->
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="el-icon-download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['hotel:orders:export']"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    <el-col :span="4" :xs="24">
+      <div class="head-container">
+        <el-tree
+          :data="hotelOptions"
+          :props="defaultProps"
+          :expand-on-click-node="false"
+          :filter-node-method="filterNode"
+          ref="tree"
+          default-expand-all
+          @node-click="handleNodeClick"
+        />
+      </div>
+    </el-col>
 
-    <el-table v-loading="loading" :data="ordersList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="ordersId" />
-      <el-table-column label="用户名" align="center" prop="username" />
-      <el-table-column label="手机" align="center" prop="phone" />
-      <el-table-column label="房间类型" align="center" prop="roomTypeName" />
-      <el-table-column label="房间数" align="center" prop="numOfRoom" />
-      <el-table-column label="预订天数" align="center" prop="orderDays" />
-      <el-table-column label="预订时间" align="center" prop="orderDate" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.orderDate, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="预订状态" align="center" prop="orderState" :formatter="orderStateFormat" />
-      <el-table-column label="预订费用" align="center" prop="orderCost" />
-      <el-table-column label="备注" align="center" prop="remark" />
-<!--      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">-->
-<!--        <template slot-scope="scope">-->
-<!--          <el-button-->
-<!--            size="mini"-->
-<!--            type="text"-->
-<!--            icon="el-icon-edit"-->
-<!--            @click="handleUpdate(scope.row)"-->
-<!--            v-hasPermi="['hotel:orders:edit']"-->
-<!--          >修改</el-button>-->
-<!--          <el-button-->
-<!--            size="mini"-->
-<!--            type="text"-->
-<!--            icon="el-icon-delete"-->
-<!--            @click="handleDelete(scope.row)"-->
-<!--            v-hasPermi="['hotel:orders:remove']"-->
-<!--          >删除</el-button>-->
-<!--        </template>-->
-<!--      </el-table-column>-->
-    </el-table>
+    <el-col :span="20" :xs="24">
 
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
-
-    <!-- 添加或修改订单管理对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="订单类型ID" prop="ordersTypeId">
-          <el-select v-model="form.ordersTypeId" placeholder="请选择订单类型ID">
-            <el-option
-              v-for="dict in ordersTypeIdOptions"
-              :key="dict.dictValue"
-              :label="dict.dictLabel"
-              :value="parseInt(dict.dictValue)"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="用户ID" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入用户ID" />
-        </el-form-item>
+      <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+          <el-input
+            v-model="queryParams.username"
+            placeholder="请输入用户名"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
         </el-form-item>
         <el-form-item label="手机" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机" />
-        </el-form-item>
-        <el-form-item label="酒店ID" prop="hotelId">
-          <el-input v-model="form.hotelId" placeholder="请输入酒店ID" />
-        </el-form-item>
-        <el-form-item label="类型ID" prop="roomTypeId">
-          <el-input v-model="form.roomTypeId" placeholder="请输入类型ID" />
+          <el-input
+            v-model="queryParams.phone"
+            placeholder="请输入手机"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
         </el-form-item>
         <el-form-item label="房间类型" prop="roomTypeName">
-          <el-input v-model="form.roomTypeName" placeholder="请输入房间类型" />
-        </el-form-item>
-        <el-form-item label="房间ID" prop="roomId">
-          <el-input v-model="form.roomId" placeholder="请输入房间ID" />
-        </el-form-item>
-        <el-form-item label="房间数" prop="numOfRoom">
-          <el-input v-model="form.numOfRoom" placeholder="请输入房间数" />
-        </el-form-item>
-        <el-form-item label="预订天数" prop="orderDays">
-          <el-input v-model="form.orderDays" placeholder="请输入预订天数" />
+          <el-input
+            v-model="queryParams.roomTypeName"
+            placeholder="请输入房间类型"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
         </el-form-item>
         <el-form-item label="预订时间" prop="orderDate">
           <el-date-picker clearable size="small"
-            v-model="form.orderDate"
-            type="date"
-            value-format="yyyy-MM-dd"
-            placeholder="选择预订时间">
+                          v-model="queryParams.orderDate"
+                          type="date"
+                          value-format="yyyy-MM-dd"
+                          placeholder="选择预订时间">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="预订状态" prop="orderState">
-          <el-input v-model="form.orderState" placeholder="请输入预订状态" />
+          <el-input
+            v-model="queryParams.orderState"
+            placeholder="请输入预订状态"
+            clearable
+            size="small"
+            @keyup.enter.native="handleQuery"
+          />
         </el-form-item>
-        <el-form-item label="预订费用" prop="orderCost">
-          <el-input v-model="form.orderCost" placeholder="请输入预订费用" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
-    </el-dialog>
+
+      <el-row :gutter="10" class="mb8">
+        <!--      <el-col :span="1.5">-->
+        <!--        <el-button-->
+        <!--          type="primary"-->
+        <!--          plain-->
+        <!--          icon="el-icon-plus"-->
+        <!--          size="mini"-->
+        <!--          @click="handleAdd"-->
+        <!--          v-hasPermi="['hotel:orders:add']"-->
+        <!--        >新增</el-button>-->
+        <!--      </el-col>-->
+        <!--      <el-col :span="1.5">-->
+        <!--        <el-button-->
+        <!--          type="success"-->
+        <!--          plain-->
+        <!--          icon="el-icon-edit"-->
+        <!--          size="mini"-->
+        <!--          :disabled="single"-->
+        <!--          @click="handleUpdate"-->
+        <!--          v-hasPermi="['hotel:orders:edit']"-->
+        <!--        >修改</el-button>-->
+        <!--      </el-col>-->
+        <!--      <el-col :span="1.5">-->
+        <!--        <el-button-->
+        <!--          type="danger"-->
+        <!--          plain-->
+        <!--          icon="el-icon-delete"-->
+        <!--          size="mini"-->
+        <!--          :disabled="multiple"-->
+        <!--          @click="handleDelete"-->
+        <!--          v-hasPermi="['hotel:orders:remove']"-->
+        <!--        >删除</el-button>-->
+        <!--      </el-col>-->
+        <el-col :span="1.5">
+          <el-button
+            type="warning"
+            plain
+            icon="el-icon-download"
+            size="mini"
+            @click="handleExport"
+            v-hasPermi="['hotel:orders:export']"
+          >导出</el-button>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+
+      <el-table v-loading="loading" :data="ordersList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="主键" align="center" prop="ordersId" />
+        <el-table-column label="用户名" align="center" prop="username" />
+        <el-table-column label="手机" align="center" prop="phone" />
+        <el-table-column label="房间类型" align="center" prop="roomTypeName" />
+        <el-table-column label="预订天数" align="center" prop="orderDays" />
+        <el-table-column label="预订时间" align="center" prop="orderDate" width="180">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.orderDate, '{y}-{m}-{d}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="预订状态" align="center" prop="orderState" :formatter="orderStateFormat" />
+        <el-table-column label="预订费用" align="center" prop="orderCost" />
+        <!--      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">-->
+        <!--        <template slot-scope="scope">-->
+        <!--          <el-button-->
+        <!--            size="mini"-->
+        <!--            type="text"-->
+        <!--            icon="el-icon-edit"-->
+        <!--            @click="handleUpdate(scope.row)"-->
+        <!--            v-hasPermi="['hotel:orders:edit']"-->
+        <!--          >修改</el-button>-->
+        <!--          <el-button-->
+        <!--            size="mini"-->
+        <!--            type="text"-->
+        <!--            icon="el-icon-delete"-->
+        <!--            @click="handleDelete(scope.row)"-->
+        <!--            v-hasPermi="['hotel:orders:remove']"-->
+        <!--          >删除</el-button>-->
+        <!--        </template>-->
+        <!--      </el-table-column>-->
+      </el-table>
+
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+      />
+
+      <!-- 添加或修改订单管理对话框 -->
+      <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+        <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+          <el-form-item label="订单类型ID" prop="ordersTypeId">
+            <el-select v-model="form.ordersTypeId" placeholder="请选择订单类型ID">
+              <el-option
+                v-for="dict in ordersTypeIdOptions"
+                :key="dict.dictValue"
+                :label="dict.dictLabel"
+                :value="parseInt(dict.dictValue)"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="用户ID" prop="userId">
+            <el-input v-model="form.userId" placeholder="请输入用户ID" />
+          </el-form-item>
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="form.username" placeholder="请输入用户名" />
+          </el-form-item>
+          <el-form-item label="手机" prop="phone">
+            <el-input v-model="form.phone" placeholder="请输入手机" />
+          </el-form-item>
+          <el-form-item label="酒店ID" prop="hotelId">
+            <el-input v-model="form.hotelId" placeholder="请输入酒店ID" />
+          </el-form-item>
+          <el-form-item label="类型ID" prop="roomTypeId">
+            <el-input v-model="form.roomTypeId" placeholder="请输入类型ID" />
+          </el-form-item>
+          <el-form-item label="房间类型" prop="roomTypeName">
+            <el-input v-model="form.roomTypeName" placeholder="请输入房间类型" />
+          </el-form-item>
+          <el-form-item label="房间ID" prop="roomId">
+            <el-input v-model="form.roomId" placeholder="请输入房间ID" />
+          </el-form-item>
+          <el-form-item label="房间数" prop="numOfRoom">
+            <el-input v-model="form.numOfRoom" placeholder="请输入房间数" />
+          </el-form-item>
+          <el-form-item label="预订天数" prop="orderDays">
+            <el-input v-model="form.orderDays" placeholder="请输入预订天数" />
+          </el-form-item>
+          <el-form-item label="预订时间" prop="orderDate">
+            <el-date-picker clearable size="small"
+                            v-model="form.orderDate"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="选择预订时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="预订状态" prop="orderState">
+            <el-input v-model="form.orderState" placeholder="请输入预订状态" />
+          </el-form-item>
+          <el-form-item label="预订费用" prop="orderCost">
+            <el-input v-model="form.orderCost" placeholder="请输入预订费用" />
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </div>
+      </el-dialog>
+
+    </el-col>
+
   </div>
 </template>
 
 <script>
 import { listOrders, getOrders, delOrders, addOrders, updateOrders, exportOrders } from "@/api/hotel/orders";
+import { hotelTreeselect } from "@/api/hotel/wineshop";
+
 
 export default {
   name: "Orders",
@@ -243,6 +254,10 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      // 酒店名称
+      hotelName: undefined,
+      // 酒店树选项
+      hotelOptions: undefined,
       // 订单类型ID字典
       ordersTypeIdOptions: [],
       // 预订状态字典
@@ -257,9 +272,14 @@ export default {
         numOfRoom: null,
         orderDate: null,
         orderState: null,
+        hotelId: null,
       },
       // 表单参数
       form: {},
+      defaultProps: {
+        children: "children",
+        label: "label"
+      },
       // 表单校验
       rules: {
       }
@@ -267,6 +287,7 @@ export default {
   },
   created() {
     this.getList();
+    this.getHotelTreeselect();
     this.getDicts("hotel_order_type").then(response => {
       this.ordersTypeIdOptions = response.data;
     });
@@ -327,6 +348,22 @@ export default {
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 查询酒店下拉树结构 */
+    getHotelTreeselect() {
+      hotelTreeselect().then(response => {
+        this.hotelOptions = response.data;
+      });
+    },
+    // 筛选节点
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
+    },
+    // 节点单击事件
+    handleNodeClick(data) {
+      this.queryParams.hotelId = data.id;
       this.getList();
     },
     /** 重置按钮操作 */

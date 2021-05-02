@@ -7,7 +7,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            用户
+            用户数
           </div>
           <count-to :start-val="0" :end-val="accountCount" :duration="2600" class="card-panel-num"/>
         </div>
@@ -20,9 +20,9 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            留言
+            留言数
           </div>
-          <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+          <count-to :start-val="0" :end-val="messageNum" :duration="3000" class="card-panel-num"/>
         </div>
       </div>
     </el-col>
@@ -46,7 +46,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            订单
+            订单量
           </div>
           <count-to :start-val="0" :end-val="orderCount" :duration="3600" class="card-panel-num"/>
         </div>
@@ -60,6 +60,7 @@
 
   import {getUserCount} from "@/api/system/user";
   import {getOrderCount, getEarnMoney} from "@/api/hotel/orders";
+  import {getMessageCount} from "@/api/hotel/message";
 
   export default {
     components: {
@@ -68,6 +69,7 @@
     data() {
       return {
         accountCount: 1000,
+        messageNum: 32,
         money: 100,
         orderCount: 52
       }
@@ -76,6 +78,7 @@
       this.getUserCount()
       this.getEarnMoney()
       this.getOrderCount()
+      this.getMessageCount()
     },
     methods: {
       handleSetLineChartData(type) {
@@ -108,6 +111,14 @@
           }
         );
       },
+      getMessageCount(){
+        this.loading = true;
+        getMessageCount().then(
+          response => {
+            this.messageNum = response.data
+          }
+        );
+      }
     }
   }
 </script>
